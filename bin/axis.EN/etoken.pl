@@ -17,6 +17,7 @@ s/\W/ $& /g;
 
 s/(\d)DOTTKN(\d)/$1\.$2/g;
 s/(\d)COLONTKN(\d)/$1\:$2/g;
-s/(\d)COMATKN(\d)/$1\,$2/g;
+#s/(\d)COMATKN(\d)/$1\,$2/g;
+s/(\d)COMATKN(\d)/$1$2/g;
 
 print "$_\n";
