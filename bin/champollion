@@ -38,11 +38,8 @@ require "champollion_kernel";
 load_xstop($Xstoplist, \%xstop);
 load_dict($dict_fn, \%xstop,\%dict);
 load_axis($xfn, \@xst, \@lenx, \%xtoken_stat, \%xtkn2snt);
-if ($notokenization) {
-    load_axis_cn($yfn, \@yst, \@leny, \%ytoken_stat, \%ytkn2snt);
-} else {
-    load_axis($yfn, \@yst, \@leny, \%ytoken_stat, \%ytkn2snt);
-}
+load_axis($yfn, \@yst, \@leny, \%ytoken_stat, \%ytkn2snt);
+
 $nx = @xst;
 $ny = @yst;
 $xyratio = $nx/$ny;
@@ -186,9 +183,7 @@ sub merge_omission {
 		foreach (@ysent) {
 		    $nytkn += $leny[$_-1];
 		}
-
-		if (abs ($pxtkn/($pytkn+$leny[$ysid-1]) - $xyratio)
-		    < abs ($nxtkn/($nytkn+$leny[$ysid-1]) - $xyratio)) {
+		if ($pxtkn/$pytkn > $nxtkn/$nytkn) {
 		    $align_org[$i-1] .= ",$ysid";
 		} else {
 		    $align_org[$i+1] =~ s/<=> /<=> $ysid,/;
@@ -227,8 +222,7 @@ sub merge_omission {
 		    $nytkn += $leny[$_-1];
 		}
 
-		if (abs (($pxtkn+$lenx[$xsid-1])/$pytkn - $xyratio)
-		    < abs ($nxtkn+$lenx[$xsid-1])/$nytkn - $xyratio) {
+		if ($pxtkn/$pytkn < $nxtkn/$nytkn) {
 		    $align_org[$i-1] =~ s/ <=>/,$xsid <=>/;
 		} else {
 		    $align_org[$i+1] = $xsid.",".$align_org[$i+1];
