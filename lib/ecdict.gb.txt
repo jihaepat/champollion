@@ -41801,3 +41801,14 @@ will <> 将
 within <> 在
 with <> 以
 would <> 将
+dishonourable <> 不端
+dishonourable <> 可耻
+honourable <> 诚实
+honourable <> 高贵
+honourable <> 加在人名前尊称
+honourable <> 可尊敬
+honourable <> 荣耀
+honourable <> 体面
+honourable <> 议员
+honourable <> 正当
+honourable <> 知耻
