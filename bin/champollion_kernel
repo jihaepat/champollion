@@ -91,12 +91,12 @@ sub align {
 #		$s11 = $i>2 && $j>2 ?               # 3-3 
 #		    get_score($i-3, $j-3) + match_sentences("$im3 $im2 $im1 - $jm3 $jm2 $jm1")
 #			: $MINS;
-#		$s12 = $i>0 && $j>3 ?                # 1-4 
-#		    get_score($i-1, $j-4) + match_sentences("$im1 - $jm4 $jm3 $jm2 $jm1")
-#			: $MINS;
-#		$s13 = $i>3 && $j>0?                 # 4-1
-#		    get_score($i-4, $j-1) + match_sentences("$im4 $im3 $im2 $im1 - $jm1")
-#			: $MINS;
+		$s12 = $i>0 && $j>3 ?                # 1-4 
+		    get_score($i-1, $j-4) + match_sentences("$im1 - $jm4 $jm3 $jm2 $jm1")
+			: $MINS;
+		$s13 = $i>3 && $j>0?                 # 4-1
+		    get_score($i-4, $j-1) + match_sentences("$im4 $im3 $im2 $im1 - $jm1")
+			: $MINS;
 	    }
 
 
