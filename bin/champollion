@@ -42,13 +42,8 @@ $nx = @xst;
 $ny = @yst;
 $xyratio = $nx/$ny;
 
-$window_size;
-if ( $nx < $ny) {
-    $window_size = int(abs($nx-$ny)*0.1 + $MIN_WIN_SIZE);
-} else {
-    $window_size = abs($nx-$ny) + $MIN_WIN_SIZE;
-}
-#print STDERR "$nx $ny $xyratio $window_size\n";
+$MIN_WIN_SIZE = 20;
+$window_size = abs($nx-$ny) + $MIN_WIN_SIZE;
 
 print STDERR "Aligning Sentences ... ";
 find_trans_pairs();
@@ -67,6 +62,12 @@ sub min {
     local ($x, $y) = @_;
 
     return $x<$y?$x:$y;
+}
+
+sub max {
+    local ($x, $y) = @_;
+
+    return $x>$y?$x:$y;
 }
 
 sub merge_omission {

@@ -1,16 +1,17 @@
 my $MINS = 0;
-my $MIN_WIN_SIZE = 20;
+
 my $penalty01 = 0.8;
 my $penalty21 = 0.95;
 my $penalty12 = 0.95;
-my $penalty22 = 0.90;
+my $penalty22 = 0.85;
 my $penalty31 = 0.90;
 my $penalty13 = 0.90;
 my $penalty23 = 0.85;
 my $penalty32 = 0.85;
 my $penalty41 = 0.85;
 my $penalty14 = 0.85;
-my $penalty33 = 0.8;
+my $penalty33 = 0.80;
+
 
 sub set_score {
     my ($x, $y, $d) = @_;
@@ -206,7 +207,8 @@ sub align {
 
 sub score_func {
     my ($map) = @_;
-    my ($score, $x, $y, @x, @y, $nx, $ny, %xtokens, %ytokens);
+    my ($score, $x, $y, @x, @y, $nx, $ny, $xlen, $ylen);
+    my $length_penalty = 1;
 
     ($x, $y) = split '-', $map;
     @x = split ' ', $x;
@@ -221,28 +223,40 @@ sub score_func {
     $ytokens = merge_token_hash(\@yst, @y);
     $score = score_bag_words(\@x,\@y,$xtokens,$ytokens,\%xtoken_stat);
 
+    foreach (@x) {
+	$xlen += $lenx[$_];
+    }
+
+    foreach (@y) {
+	$ylen += $leny[$_];
+    }
+
+    if (max($xlen,$ylen) > 20) {
+	$length_penalty =  log(8+2*min($xlen,$ylen)/max($xlen,$ylen))/log(10);
+    }
+
     if ($nx == 1 && $ny == 1) {
 	return $score;
     } elsif ($nx == 1 && $ny == 2) {
-	return $score * $penalty12;
+	return $score * $length_penalty * $penalty12;
     } elsif ($nx == 2 && $ny == 1) {
-	return $score * $penalty21;
+	return $score * $length_penalty * $penalty21;
     } elsif ($nx == 2 && $ny == 2) {
-	return $score * $penalty22;
+	return $score * $length_penalty * $penalty22;
     } elsif ($nx == 1 && $ny == 3) {
-	return $score * $penalty13;
+	return $score * $length_penalty * $penalty13;
     } elsif ($nx == 3 && $ny == 1) {
-	return $score * $penalty31;
+	return $score * $length_penalty * $penalty31;
     } elsif ($nx == 2 && $ny == 3) {
-	return $score * $penalty23;
+	return $score * $length_penalty * $penalty23;
     } elsif ($nx == 3 && $ny == 2) {
-	return $score * $penalty32;
+	return $score * $length_penalty * $penalty32;
     } elsif ($nx == 3 && $ny == 3) {
-	return $score * $penalty33;
+	return $score * $length_penalty * $penalty33;
     } elsif ($nx == 1 && $ny == 4) {
-	return $score * $penalty14;
+	return $score * $length_penalty * $penalty14;
     } elsif ($nx == 4 && $ny == 1) {
-	return $score * $penalty41;
+	return $score * $length_penalty * $penalty41;
     }
 }
 
