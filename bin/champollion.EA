@@ -29,13 +29,13 @@ fi
 
 # Tokenize Arabic
 echo "Tokenizing Arabic ... "
-$CTK/bin/axis.CN/axis.CN $2 > $ar_axis
+$CTK/bin/axis.AR/axis.AR $2 > $ar_axis
 if [ $? -ne 0 ]; then
 exit 3
 fi
 # Align sentences
 echo "Aligning Sentences ... "
-$CTK/bin/champollion -d $CTK/lib/eadict.4k.utf8.txt -s $CTK/lib/E.stoplist $en_axis $ar_axis $3
+$CTK/bin/champollion -d $CTK/lib/eadict.utf8.txt -s $CTK/lib/E.stoplist -c 1.61 $en_axis $ar_axis $3
 
 # Remove intermediate files
 rm $en_axis $ar_axis

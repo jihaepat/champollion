@@ -48,7 +48,7 @@ $ny = @yst;
 $xyratio = $nx/$ny;
 
 $WIN_PER_100 = 8;
-$MIN_WIN_SIZE = 20;
+$MIN_WIN_SIZE = 10;
 $MAX_WIN_SIZE = 600;
 $w1_size = int($xyratio*$nx*$WIN_PER_100/100);
 $w2_size = int(abs($nx-$ny)*3/4);
