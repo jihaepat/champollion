@@ -18,8 +18,8 @@ if [ $# -ne 3 ]; then
     exit 1
 fi
 
-en_axis=/tmp/`basename $1`.axis
-cn_axis=/tmp/`basename $2`.axis
+en_axis=/tmp/`basename $1`.en.axis
+cn_axis=/tmp/`basename $2`.cn.axis
 
 
 # Tokenize English
