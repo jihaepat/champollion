@@ -47,9 +47,14 @@ $nx = @xst;
 $ny = @yst;
 $xyratio = $nx/$ny;
 
+$WIN_PER_100 = 10;
 $MIN_WIN_SIZE = 20;
-$window_size = abs($nx-$ny) + $MIN_WIN_SIZE;
+$MAX_WIN_SIZE = 600;
+$window_size = int($xyratio*$nx*$WIN_PER_100/100);
+$window_size = $MIN_WIN_SIZE if $window_size < $MIN_WIN_SIZE;
+$window_size = $MAX_WIN_SIZE if $window_size > $MAX_WIN_SIZE;
 
+print STDERR "WIN size: $window_size ... \n";
 print STDERR "Aligning Sentences ... ";
 if ($notokenization) {
     find_trans_pairs_cn();
@@ -256,7 +261,7 @@ usage: $0 [-hnsd] <X token file> <Y token file> <alignment file>
       -h       : this (help) message
       -d dictf : use dictf as the translation dictionary
       -s xstop : use words in file xstop as X stop words
-      -n       : disallow 1-3, 2-3, 3-3 alignments
+      -n       : disallow 1-3, 3-1, 1-4, 4-1 alignments
               (faster, lower performance)
 
 EOF
@@ -297,7 +302,7 @@ sub find_trans_pairs {
 	    }
 	}
 	$dict_idx{$entry++} = "$xtoken $xtoken" if $found;
-	# print STDERR "DICT $entry: $dict_idx{$entry-1}\n" if $found;
+        #print STDERR "DICT $entry: $dict_idx{$entry-1}\n" if $found;
 	foreach $xtoken_trans (@{$dict{$xtoken}}) {
 	    $found = 0;
 	    # print STDERR "XTT: $xtoken_trans\n";
@@ -312,7 +317,7 @@ sub find_trans_pairs {
 		}
 	    }
 	    $dict_idx{$entry++} = "$xtoken $xtoken_trans" if $found;
-	    # print STDERR "DICT $entry: $dict_idx{$entry-1}\n" if $found;
+	    #print STDERR "DICT $entry: $dict_idx{$entry-1}\n" if $found;
 	}
     }
 }
