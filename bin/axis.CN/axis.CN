@@ -1,0 +1,8 @@
+#!/bin/sh
+
+cat $* | \
+$CTK/bin/axis.CN/gb2mixed | \
+$CTK/bin/axis.CN/gb-num2arabic | \
+$CTK/thirdparty/ldc-cn-seg/mansegment.perl | \
+$CTK/bin/axis.CN/cn-tk-number-ascii | \
+$CTK/bin/eos_tokenize.pl

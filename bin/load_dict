@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+
+sub load_dict {
+    local ($dict_fn, $xstop_href, $dict_href) = @_;
+
+    print STDERR "Reading seed translation lexicon...";
+    open D, "<$dict_fn" || die "$0: Couldn't open $dict_fn!\n";
+    while (<D>) {
+	chomp;
+	($source, $translation) = split(/ <> /, $_);
+	$source =~ s/A-Z/a-z/;
+	$source =~ s/^\s+//;
+	$source =~ s/\s+$//;
+	$translation =~ s/^\s+//;
+	$translation =~ s/\s+$//;
+	next if defined $$xstop_href{$source};
+	push  @{$dict{$source}}, $translation;
+    }
+    close D;
+    print STDERR " done.\n";
+    print STDERR "Number of entries: ", scalar keys %dict, "\n";
+}
+
+1;

@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+sub load_axis {
+    my ($axis_fn, $st_aref, $len_aref, $token_stat_href, $tkn2snt_href) = @_;
+    my $token, %new_st, %tkn2snt;
+    my $stno = 0;
+    
+    open A, "<$axis_fn" || die "$0: Can not open $axis_fn\n";
+    
+    print STDERR "Loading axis...";
+    while (<A>){
+	chomp;
+	next if /^\s*$/;
+	next if defined $xstop{$_};
+	if ($_ eq "<EOS>") {
+	    push @$st_aref, {%new_st};
+	    undef %new_st;
+	    $stno++;
+	} elsif ($_ ne "<EOS>") {
+	    $$len_aref[$stno]++;
+	    $$token_stat_href{$_}++;
+	    $$token_stat_href{TTAALL}++;
+	    $new_st{$_}++;
+	    $$tkn2snt_href{$_}{$stno} = 1;
+	}
+    }
+    close A;
+    print STDERR "done.\n";
+    print STDERR "Number of sentences: $stno\n";
+}
+
+1;

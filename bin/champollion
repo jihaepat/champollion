@@ -1,0 +1,296 @@
+#!/usr/bin/perl
+#
+# Usage: champollion [-hfnsda] <L1 axis> <L2 axis> <alignment output file>
+#
+
+use Getopt::Std;
+
+#
+# parse command line
+#
+getopts('hnas:d:', \%opts) || usage();
+usage() if $opts{h};
+
+$fast = $opts{f};
+$disallow3 = $opts{n};
+$alignall = $opts{a};
+$dict_fn = $opts{d};
+$Xstoplist = $opts{s};
+usage() if @ARGV != 3;
+
+$xfn = shift;
+$yfn = shift;
+$align_fn = shift;
+
+
+#
+# load components
+#
+push @INC,"$ENV{CTK}/bin";
+require "load_xstop";
+require "load_dict";
+require "load_axis";
+require "champollion_kernel";
+
+
+load_xstop($Xstoplist, \%xstop);
+load_dict ($dict_fn, \%xstop,\%dict);
+load_axis ($xfn, \@xst, \@lenx, \%xtoken_stat, \%xtkn2snt);
+load_axis ($yfn, \@yst, \@leny, \%ytoken_stat, \%ytkn2snt);
+
+$nx = @xst;
+$ny = @yst;
+$xyratio = $nx/$ny;
+
+$window_size;
+if ( $nx < $ny) {
+    $window_size = int(abs($nx-$ny)*0.1 + $MIN_WIN_SIZE);
+} else {
+    $window_size = abs($nx-$ny) + $MIN_WIN_SIZE;
+}
+#print STDERR "$nx $ny $xyratio $window_size\n";
+
+print STDERR "Aligning Sentences ... ";
+find_trans_pairs();
+align(\@lenx, \@leny, $nx, $ny);
+print STDERR "done.
+";
+# If all sentences are transalated
+if ($alignall) {
+    merge_omission();
+}
+
+print_alignment($align_fn);
+exit;
+
+sub min {
+    local ($x, $y) = @_;
+
+    return $x<$y?$x:$y;
+}
+
+sub merge_omission {
+    my $xalign_tkn, $yalign_tkn, $xyratio;
+    my %x2ymap, %y2xmap;
+    my @align_org, @align;
+
+    @align_org = reverse @ralign;
+
+    $i = 0;
+    $x2ymap{0} = [0];
+    $y2xmap{0} = [0];
+    $xfnp1 = $xfn+1;
+    $yfnp1 = $yfn+1;
+    $x2ymap{$xfnp1} = [$yfnp1];
+    $y2xmap{$yfnp1} = [$xfnp1];
+    foreach (@align_org) {
+	$index{$_} = $i; $i++;
+	next if /omitted/;
+	/(.+) <=> (.+)/;
+	$xsent = $1; $ysent = $2;
+	@xsent = split /,/, $xsent;
+	@ysent = split /,/, $ysent;
+	foreach (@xsent) {
+	    $xalign_tkn += $lenx[$_-1];
+	    $x2ymap{$_} = [@ysent];
+	}
+	foreach (@ysent) {
+	    $yalign_tkn += $leny[$_-1];
+	    $y2xmap{$_} = [@xsent];
+	}
+    }
+    
+    $xyratio = $xalign_tkn/$yalign_tkn;
+
+    for ($i = 0; $i<@align_org; $i++) {
+	next unless $align_org[$i] =~ /omitted/;
+
+	if ($align_org[$i] =~ /omitted <=> (\d+)/) {
+	    $ysid = $1;
+	    $lb = lowerbound($ysid, \%y2xmap);
+	    $ub = upperbound($ysid, \%y2xmap);
+	    #print STDERR "UB: $ub LB: $lb\n";
+	    next unless defined $ub && defined $lb;
+	    if ($ub-$lb == 2) {
+		$xsid = $lb+1;
+		$align_org[$i] = "$xsid <=> $ysid";
+		$align_org[$index{"$xsid <=> omitted"}] = "";
+	    } elsif ($ub-$lb == 1) {
+		my $pxtkn, $pytkn, $nxtkn, $nytkn;
+		
+		# counting tokens of previous alignment
+		$align_org[$i-1] =~ /(.+) <=> (.+)/;
+		$xsent = $1; $ysent = $2;
+		@xsent = split /,/, $xsent;
+		@ysent = split /,/, $ysent;
+		foreach (@xsent) {
+		    $pxtkn += $lenx[$_-1];
+		}
+		foreach (@ysent) {
+		    $pytkn += $leny[$_-1];
+		}
+
+		# counting tokens of next alignment
+		$align_org[$i+1] =~ /(.+) <=> (.+)/;
+		$xsent = $1; $ysent = $2;
+		@xsent = split /,/, $xsent;
+		@ysent = split /,/, $ysent;
+		foreach (@xsent) {
+		    $nxtkn += $lenx[$_-1];
+		}
+		foreach (@ysent) {
+		    $nytkn += $leny[$_-1];
+		}
+
+		if (abs ($pxtkn/($pytkn+$leny[$ysid-1]) - $xyratio)
+		    < abs ($nxtkn/($nytkn+$leny[$ysid-1]) - $xyratio)) {
+		    $align_org[$i-1] .= ",$ysid";
+		} else {
+		    $align_org[$i+1] =~ s/<=> /<=> $ysid,/;
+		}
+		$align_org[$i] = "";
+	    }
+	} elsif ($align_org[$i] =~ /(\d+) <=> omitted/) {
+	    $xsid = $1;
+	    $lb = lowerbound($xsid, \%x2ymap);
+	    $ub = upperbound($xsid, \%x2ymap);
+	    next unless defined $ub && defined $lb;
+	    if ($ub-$lb == 1) {
+		my ($pxtkn, $pytkn, $nxtkn, $nytkn) = (0,0,0,0);
+		
+		# counting tokens of previous alignment
+		$align_org[$i-1] =~ /(.+) <=> (.+)/;
+		$xsent = $1; $ysent = $2;
+		@xsent = split /,/, $xsent;
+		@ysent = split /,/, $ysent;
+		foreach (@xsent) {
+		    $pxtkn += $lenx[$_-1];
+		}
+		foreach (@ysent) {
+		    $pytkn += $leny[$_-1];
+		}
+
+		# counting tokens of next alignment
+		$align_org[$i+1] =~ /(.+) <=> (.+)/;
+		$xsent = $1; $ysent = $2;
+		@xsent = split /,/, $xsent;
+		@ysent = split /,/, $ysent;
+		foreach (@xsent) {
+		    $nxtkn += $lenx[$_-1];
+		}
+		foreach (@ysent) {
+		    $nytkn += $leny[$_-1];
+		}
+
+		if (abs (($pxtkn+$lenx[$xsid-1])/$pytkn - $xyratio)
+		    < abs ($nxtkn+$lenx[$xsid-1])/$nytkn - $xyratio) {
+		    $align_org[$i-1] =~ s/ <=>/,$xsid <=>/;
+		} else {
+		    $align_org[$i+1] = $xsid.",".$align_org[$i+1];
+		}
+		$align_org[$i] = "";
+	    }
+	}
+    }
+    undef @ralign;
+    foreach (@align_org) {
+	push @ralign, $_ unless /^$/;
+    }
+    
+    @ralign = reverse @ralign;
+    
+}
+
+sub print_alignment {
+    my ($align_fn) = @_;
+
+    open A, ">$align_fn" || die;
+    foreach (reverse @ralign) {
+	print A "$_\n";
+    }
+    close A;
+}
+
+sub lowerbound {
+    my ($sid, $mapref) = @_;
+
+    my $psid = $sid - 1;
+    my @map = @{$$mapref{$psid}};
+    if (@map) {
+	return $map[$#map];
+    } else {
+	return;
+    }
+}
+
+sub upperbound {
+    my ($sid, $mapref) = @_;
+
+    my $nsid = $sid + 1;
+    my @map = @{$$mapref{$nsid}};
+    if (@map) {
+	return $map[0];
+    } else {
+	return;
+    }
+}
+
+
+sub usage() {
+    print STDERR << "EOF";
+usage: $0 [-hnsd] <X token file> <Y token file> <alignment file>
+      
+      -h       : this (help) message
+      -d dictf : use dictf as the translation dictionary
+      -s xstop : use words in file xstop as X stop words
+      -n       : disallow 1-3, 2-3, 3-3 alignments
+              (faster, lower performance)
+
+EOF
+
+       exit;
+}
+
+
+sub inwindow {
+    my ($xsnt, $ysnt) = @_;
+
+    my $center = int($ysnt * $xyratio);
+    $window_start = $center-$window_size>0?$center-$window_size:0;
+    $window_end = $center+$window_size<$nx?$center+$window_size:$nx;
+
+    if ($xsnt >= $window_start && $xsnt <= $window_end) {
+	return 1;
+    } else {
+	return 0;
+    }
+}
+
+
+sub find_trans_pairs {
+    my $entry = 0;
+    
+    foreach $xtoken (keys %xtkn2snt) {
+	next if defined $xstop{$xtoken};
+        foreach $ysnt (keys %{$ytkn2snt{$xtoken}}) {
+	    foreach $xsnt (keys %{$xtkn2snt{$xtoken}}) {
+		if (inwindow($xsnt,$ysnt)) {
+		    push @{$transpairs{$xsnt,$ysnt}}, $entry;
+		}
+	    }
+	}
+	$dict_idx{$entry++} = "$xtoken $xtoken" if defined $ytkn2snt{$xtoken};
+	foreach $xtoken_trans (@{$dict{$xtoken}}) {
+	    foreach $ysnt (keys %{$ytkn2snt{$xtoken_trans}}) {
+		foreach $xsnt (keys %{$xtkn2snt{$xtoken}}) {
+		    if (inwindow($xsnt,$ysnt)) {
+			push @{$transpairs{$xsnt,$ysnt}}, $entry;
+			#print STDERR "$xsnt $ysnt $xtoken $xtoken_trans\n";
+		    }
+		}
+	    }
+	    $dict_idx{$entry++} = "$xtoken $xtoken_trans" if defined $ytkn2snt{$xtoken_trans};
+	    #print STDERR "$dict_idx{$entry-1}\n";
+	}
+    }
+}

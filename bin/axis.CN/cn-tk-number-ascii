@@ -1,0 +1,6 @@
+#!/usr/bin/perl -p
+
+s/\d+(\,\d+)*(\.\d+)?/ $& /g;
+s/[a-zA-Z]+/sprintf " %s ", lc $& /eg;
+
+
