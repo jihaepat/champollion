@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Usage: champollion [-hfnsda] <L1 axis> <L2 axis> <alignment output file>
+# Usage: champollion [-hfnscda] <L1 axis> <L2 axis> <alignment output file>
 #
 
 use Getopt::Std;
@@ -8,12 +8,13 @@ use Getopt::Std;
 #
 # parse command line
 #
-getopts('hnas:d:', \%opts) || usage();
+getopts('hnacs:d:', \%opts) || usage();
 usage() if $opts{h};
 
 $fast = $opts{f};
 $disallow3 = $opts{n};
 $alignall = $opts{a};
+$notokenization = $opts{c};
 $dict_fn = $opts{d};
 $Xstoplist = $opts{s};
 usage() if @ARGV != 3;
@@ -30,14 +31,18 @@ push @INC,"$ENV{CTK}/bin";
 require "load_xstop";
 require "load_dict";
 require "load_axis";
+require "len_match.pl";
 require "champollion_kernel";
 
 
 load_xstop($Xstoplist, \%xstop);
-load_dict ($dict_fn, \%xstop,\%dict);
-load_axis ($xfn, \@xst, \@lenx, \%xtoken_stat, \%xtkn2snt);
-load_axis ($yfn, \@yst, \@leny, \%ytoken_stat, \%ytkn2snt);
-
+load_dict($dict_fn, \%xstop,\%dict);
+load_axis($xfn, \@xst, \@lenx, \%xtoken_stat, \%xtkn2snt);
+if ($notokenization) {
+    load_axis_cn($yfn, \@yst, \@leny, \%ytoken_stat, \%ytkn2snt);
+} else {
+    load_axis($yfn, \@yst, \@leny, \%ytoken_stat, \%ytkn2snt);
+}
 $nx = @xst;
 $ny = @yst;
 $xyratio = $nx/$ny;
@@ -46,11 +51,18 @@ $MIN_WIN_SIZE = 20;
 $window_size = abs($nx-$ny) + $MIN_WIN_SIZE;
 
 print STDERR "Aligning Sentences ... ";
-find_trans_pairs();
+if ($notokenization) {
+    find_trans_pairs_cn();
+} else {
+    find_trans_pairs();
+}
+
+
 align(\@lenx, \@leny, $nx, $ny);
+
 print STDERR "done.
 ";
-# If all sentences are transalated
+# If all sentences are translated
 if ($alignall) {
     merge_omission();
 }
@@ -270,28 +282,105 @@ sub inwindow {
 
 sub find_trans_pairs {
     my $entry = 0;
-    
+    my $found = 0;
+
     foreach $xtoken (keys %xtkn2snt) {
+	# print STDERR "XT: $xtoken\n";
+	$found = 0;
 	next if defined $xstop{$xtoken};
         foreach $ysnt (keys %{$ytkn2snt{$xtoken}}) {
 	    foreach $xsnt (keys %{$xtkn2snt{$xtoken}}) {
 		if (inwindow($xsnt,$ysnt)) {
 		    push @{$transpairs{$xsnt,$ysnt}}, $entry;
+		    $found = 1;
 		}
 	    }
 	}
-	$dict_idx{$entry++} = "$xtoken $xtoken" if defined $ytkn2snt{$xtoken};
+	$dict_idx{$entry++} = "$xtoken $xtoken" if $found;
+	# print STDERR "DICT $entry: $dict_idx{$entry-1}\n" if $found;
 	foreach $xtoken_trans (@{$dict{$xtoken}}) {
+	    $found = 0;
+	    # print STDERR "XTT: $xtoken_trans\n";
 	    foreach $ysnt (keys %{$ytkn2snt{$xtoken_trans}}) {
+		# print STDERR "$ysnt\n";
 		foreach $xsnt (keys %{$xtkn2snt{$xtoken}}) {
 		    if (inwindow($xsnt,$ysnt)) {
 			push @{$transpairs{$xsnt,$ysnt}}, $entry;
+			$found = 1;
 			#print STDERR "$xsnt $ysnt $xtoken $xtoken_trans\n";
 		    }
 		}
 	    }
-	    $dict_idx{$entry++} = "$xtoken $xtoken_trans" if defined $ytkn2snt{$xtoken_trans};
-	    #print STDERR "$dict_idx{$entry-1}\n";
+	    $dict_idx{$entry++} = "$xtoken $xtoken_trans" if $found;
+	    # print STDERR "DICT $entry: $dict_idx{$entry-1}\n" if $found;
 	}
     }
+}
+
+sub find_trans_pairs_cn {
+    my $entry = 0;
+    my @ystno;
+
+    foreach $xtoken (sort keys %xtkn2snt) {
+	# print STDERR "XT: $xtoken\n";
+	$found = 0;
+	next if defined $xstop{$xtoken};
+	@ystno = cn_index($xtoken);
+	# print STDERR join ' ', @ystno, "\n";
+	foreach $ysnt (@ystno) {
+	    foreach $xsnt (keys %{$xtkn2snt{$xtoken}}) {
+		if (inwindow($xsnt,$ysnt) && $yst[$ysnt]=~/\b$xtoken\b/) {
+		    push @{$transpairs{$xsnt,$ysnt}}, $entry;
+		    $found = 1;
+		}
+	    }
+	}
+	$dict_idx{$entry++} = "$xtoken $xtoken" if $found;
+	#print STDERR "DICT $entry: $dict_idx{$entry-1}\n" if $found;;
+	foreach $xtoken_trans (@{$dict{$xtoken}}) {
+	    $found = 0;
+	    # print STDERR "XTT: $xtoken_trans\n";
+	    @ystno = cn_index($xtoken_trans);
+	    # print STDERR join ' ', @ystno, "\n";
+	    foreach $ysnt (@ystno) {
+		foreach $xsnt (keys %{$xtkn2snt{$xtoken}}) {
+		    if (inwindow($xsnt,$ysnt) && $yst[$ysnt]=~/$xtoken_trans/ ) {
+			push @{$transpairs{$xsnt,$ysnt}}, $entry;
+			$found = 1;
+			#print STDERR "$xsnt $ysnt $xtoken $xtoken_trans\n";
+		    }
+		}
+	    }
+	    $dict_idx{$entry++} = "$xtoken $xtoken_trans" if $found;
+	    # print STDERR "DICT $entry: $dict_idx{$entry-1}\n" if $found;
+	}
+    }
+}
+
+sub cn_index {
+    my ($string) = @_;
+    my (%snt, @char, %seen, %new, @uniqchar);
+
+    #print STDERR $string, "\n";
+    #print STDERR join ' ', @uniqchar,"\n";
+    $string =~ s/\\(.)/$1/g;
+    @char = split //, $string;
+
+    %seen = ();
+    foreach $item (@char) {
+	push(@uniqchar, $item) unless $seen{$item}++;
+    }
+
+    #print STDERR join ' ', @uniqchar,"\n";
+    %snt=%{$ytkn2snt{$uniqchar[0]}};
+    #print STDERR $uniqchar[0]," ", join ' ', keys %snt,"\n";
+    for($i=1; $i<@uniqchar; $i++) {
+	%new = %{$ytkn2snt{$uniqchar[$i]}};
+	foreach (keys %snt) {
+	    delete $snt{$_} unless $new{$_};
+	}
+	return keys %snt if keys %snt == 0;
+    }
+
+    return keys %snt;
 }

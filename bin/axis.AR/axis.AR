@@ -3,5 +3,5 @@
 cat $* | \
 $CTK/bin/axis.AR/atoken.pl | \
 $CTK/bin/axis.AR/ar-stemmer-utf8.pl | \
-$CTK/bin/axis.EN/lowercase | \
-$CTK/bin/eos_tokenize.pl
+$CTK/bin/axis.EN/lowercase
+#| $CTK/bin/eos_tokenize.pl

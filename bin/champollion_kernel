@@ -6,11 +6,23 @@ my $penalty12 = 0.95;
 my $penalty22 = 0.85;
 my $penalty31 = 0.90;
 my $penalty13 = 0.90;
-my $penalty23 = 0.85;
-my $penalty32 = 0.85;
+my $penalty23 = 0; #0.85;
+my $penalty32 = 0; #0.85;
 my $penalty41 = 0.85;
 my $penalty14 = 0.85;
-my $penalty33 = 0.80;
+my $penalty33 = 0; #0.80;
+
+# my $penalty01 = 1; # 0.8;
+# my $penalty21 = 1; # 0.95;
+# my $penalty12 = 1; # 0.95;
+# my $penalty22 = 0.85; # 0.85;
+# my $penalty31 = 1; # 0.90;
+# my $penalty13 = 1; # 0.90;
+# my $penalty23 = 1; # 0; #0.85;
+# my $penalty32 = 1; # 0; #0.85;
+# my $penalty41 = 1; # 0.85;
+# my $penalty14 = 1; # 0.85;
+# my $penalty33 = 1; # 0; #0.80;
 
 
 sub set_score {
@@ -46,45 +58,45 @@ sub align {
 	    $jm1 = $j-1; $jm2 = $j-2; $jm3 = $j-3; $jm4 = $j-4; 
 	    
             $s1 = $i>0 && $j>0 ?                # 1-1 
-                get_score($i-1, $j-1) + score_func("$im1 - $jm1")
+                get_score($i-1, $j-1) + match_sentences("$im1 - $jm1")
                     : $MINS;
             $s2 = $i>0 ?                        # 1-0
-                get_score($i-1, $j) + score_func("$im1 -")
+                get_score($i-1, $j) + match_sentences("$im1 -")
                     : $MINS;
             $s3 = $j>0 ?                        # 0-1 
-                get_score($i, $j-1) + score_func("- $jm1")
+                get_score($i, $j-1) + match_sentences("- $jm1")
                     : $MINS;
             $s4 = $i>1 && $j>0 ?                # 2-1 
-                get_score($i-2, $j-1) + score_func("$im2 $im1 - $jm1")
+                get_score($i-2, $j-1) + match_sentences("$im2 $im1 - $jm1")
                     : $MINS;
             $s5 = $i>0 && $j>1 ?                # 1-2 
-                get_score($i-1, $j-2) + score_func("$im1 - $jm2 $jm1")
+                get_score($i-1, $j-2) + match_sentences("$im1 - $jm2 $jm1")
 		    : $MINS;
             $s6 = $i>1 && $j>1 ?                # 2-2 
-                get_score($i-2, $j-2) + score_func("$im2 $im1 - $jm2 $jm1")
+                get_score($i-2, $j-2) + match_sentences("$im2 $im1 - $jm2 $jm1")
                     : $MINS; 
 
 	    unless ($disallow3) {
 		$s7 = $i>0 && $j>2 ?                # 1-3 
-		    get_score($i-1, $j-3) + score_func("$im1 - $jm3 $jm2 $jm1")
+		    get_score($i-1, $j-3) + match_sentences("$im1 - $jm3 $jm2 $jm1")
 			: $MINS;
 		$s8 = $i>2 && $j>0?                 # 3-1
-		    get_score($i-3, $j-1) + score_func("$im3 $im2 $im1 - $jm1")
+		    get_score($i-3, $j-1) + match_sentences("$im3 $im2 $im1 - $jm1")
 			: $MINS;
-		$s9 = $i>1 && $j>2 ?                # 2-3 
-		    get_score($i-2, $j-3) + score_func("$im2 $im1 - $jm3 $jm2 $jm1")
-			: $MINS;
-		$s10 = $i>2 && $j>1 ?               # 3-2 
-		    get_score($i-3, $j-2) + score_func("$im3 $im2 $im1 - $jm2 $jm1")
-			: $MINS;
-		$s11 = $i>2 && $j>2 ?               # 3-3 
-		    get_score($i-3, $j-3) + score_func("$im3 $im2 $im1 - $jm3 $jm2 $jm1")
-			: $MINS;
+#		$s9 = $i>1 && $j>2 ?                # 2-3 
+#		    get_score($i-2, $j-3) + match_sentences("$im2 $im1 - $jm3 $jm2 $jm1")
+#			: $MINS;
+#		$s10 = $i>2 && $j>1 ?               # 3-2 
+#		    get_score($i-3, $j-2) + match_sentences("$im3 $im2 $im1 - $jm2 $jm1")
+#			: $MINS;
+#		$s11 = $i>2 && $j>2 ?               # 3-3 
+#		    get_score($i-3, $j-3) + match_sentences("$im3 $im2 $im1 - $jm3 $jm2 $jm1")
+#			: $MINS;
 		$s12 = $i>0 && $j>3 ?                # 1-4 
-		    get_score($i-1, $j-4) + score_func("$im1 - $jm4 $jm3 $jm2 $jm1")
+		    get_score($i-1, $j-4) + match_sentences("$im1 - $jm4 $jm3 $jm2 $jm1")
 			: $MINS;
 		$s13 = $i>3 && $j>0?                 # 4-1
-		    get_score($i-4, $j-1) + score_func("$im4 $im3 $im2 $im1 - $jm1")
+		    get_score($i-4, $j-1) + match_sentences("$im4 $im3 $im2 $im1 - $jm1")
 			: $MINS;
 	    }
 
@@ -205,7 +217,7 @@ sub align {
 }
 
 
-sub score_func {
+sub match_sentences {
     my ($map) = @_;
     my ($score, $x, $y, @x, @y, $nx, $ny, $xlen, $ylen);
     my $length_penalty = 1;
@@ -218,25 +230,64 @@ sub score_func {
     
     return 0.01 if $nx ==0 || $ny == 0;
 
+    # faster implementation
+    if ($fast) {
+	if ($nx == 1 && $ny == 1) {
+	    $score = score11(@x, @y);
+	} elsif ($nx == 1 && $ny == 2) {
+	    $score = score12(@x, @y);
+	} elsif ($nx == 2 && $ny == 1) {
+	    $score = score12(@x, @y);
+	} elsif ($nx == 2 && $ny == 2) {
+	    $score = score12(@x, @y);
+	} elsif ($nx == 1 && $ny == 3) {
+	    $score = score13(@x, @y);
+	} elsif ($nx == 3 && $ny == 1) {
+	    $score = score31(@x, @y);
+	} elsif ($nx == 2 && $ny == 3) {
+	    $score = score23(@x, @y);
+	} elsif ($nx == 3 && $ny == 2) {
+	    $score = score32(@x, @y);
+	} elsif ($nx == 3 && $ny == 3) {
+	    $score = score33(@x, @y);
+	} elsif ($nx == 1 && $ny == 4) {
+	    $score = score14(@x, @y);
+	} elsif ($nx == 4 && $ny == 1) {
+	    $score = score41(@x, @y);
+	}
 
-    $xtokens = merge_token_hash(\@xst, @x);
-    $ytokens = merge_token_hash(\@yst, @y);
-    $score = score_bag_words(\@x,\@y,$xtokens,$ytokens,\%xtoken_stat);
-
-    foreach (@x) {
-	$xlen += $lenx[$_];
+    # slower implementation
+    } else {
+	$xsentences = merge_sentences(\@xst, @x);
+	unless ($notokenization) {
+	    $ysentences = merge_sentences(\@yst, @y);
+	}
+	$score = match_sentences_lex(\@x,\@y,$xsentences,$ysentences,\%xtoken_stat);
     }
 
-    foreach (@y) {
-	$ylen += $leny[$_];
-    }
+#    if ($length) {
 
-    if (max($xlen,$ylen) > 20) {
-	$length_penalty =  log(8+2*min($xlen,$ylen)/max($xlen,$ylen))/log(10);
-    }
+	foreach (@x) {
+	    $xlen += $lenx[$_];
+	}
+
+	foreach (@y) {
+	    $ylen += $leny[$_];
+	}
+
+	if (max($xlen,$ylen*1.577) > 80) {
+	    #$length_penalty = log(8+2*min($xlen*0.5265,$ylen)/max($xlen*0.5265,$ylen))/log(10);
+	    $length_penalty = log(6+4*min($xlen*0.634,$ylen)/max($xlen*0.634,$ylen))/log(10);
+	    # chinese chars per english words: 0.5265 if not segmented with 1.829 variance.
+            #
+	    #$length_penalty = match_sentences_len($xlen, $ylen,0.5265,1.829);
+	    # print STDERR "LEN: $xlen $ylen\t$score\t$length_penalty\n";
+	    # print STDERR "FS: ", $score*$length_penalty,"\n";
+	}
+#    }
 
     if ($nx == 1 && $ny == 1) {
-	return $score;
+	return $score * $length_penalty;
     } elsif ($nx == 1 && $ny == 2) {
 	return $score * $length_penalty * $penalty12;
     } elsif ($nx == 2 && $ny == 1) {
@@ -261,54 +312,74 @@ sub score_func {
 }
 
 
-sub score_bag_words {
-    my ($xsnts, $ysnts, $xtoken_href, $ytoken_href, $xtoken_stat_href) = @_;
-    my %xtoken_h = %$xtoken_href;
-    my %ytoken_h = %$ytoken_href;
-    my $min_pairs, $score = 0;
+sub match_sentences_lex {
+    my ($xsnts_index, $ysnts_index, $xsentences, $ysentences, $xtoken_stat_href) = @_;
+    my (%xtokens,%ytokens);
+    my $min_pairs = 1, $score = 0;
+
+    @_ = split ' ', $xsentences;
+    foreach (@_) {
+	$xtokens{$_}++;
+    }
+
+    @_ = split ' ', $ysentences;
+    foreach (@_) {
+	$ytokens{$_}++;
+    }
+
     
     #print STDERR "score bag words\n";
 
     $x_total_tokens = $$xtoken_stat_href{"TTAALL"};
 
-    foreach $xsnt (@$xsnts) {
-	foreach $ysnt (@$ysnts) {
-	    #print STDERR "$xsnt $ysnt\n";
+    # print STDERR "\n\n", join ' ',@$xsnts_index,"-", join ' ',@$ysnts_index,"\n";
+
+    foreach $xsnt (@$xsnts_index) {
+	foreach $ysnt (@$ysnts_index) {
+	    #print STDERR "----$xsnt $ysnt-----\n";
 	    foreach $idx (@{$transpairs{$xsnt,$ysnt}}) {
 		$pair = $dict_idx{$idx};
+		# print STDERR "$pair\n";
 		($xtoken, $xtoken_trans) = split ' ', $pair;
 		#print STDERR "$pair: $xtoken, $xtoken_trans\n";
-		$min_pairs = min($xtoken_h{$xtoken},$ytoken_h{$xtoken_trans});
+		if ($notokenization) {
+		    $min_pairs = min($xtokens{$xtoken},1);
+		} else {
+		    $min_pairs = min($xtokens{$xtoken},$ytokens{$xtoken_trans});
+		}
+		# print STDERR "$xtoken $xtokens{$xtoken} - MINP: $min_pairs\n";
 		$score += log(($x_total_tokens/$$xtoken_stat_href{$xtoken}) * $min_pairs + 1);
-		$xtoken_h{$xtoken} -= $min_pairs;
-		$ytoken_h{$xtoken_trans} -= $min_pairs;
+		#$score *= ($x_total_tokens/$$xtoken_stat_href{$xtoken}) * $min_pairs;
+		$xtokens{$xtoken} -= $min_pairs;
+		unless ($notokenization) {
+		    $ytokens{$xtoken_trans} -= $min_pairs;
+		}
 	    }
 	}
     }
+    #print STDERR "Score: $score\n";
     return $score;
 }
 
-sub merge_token_hash {
+sub merge_sentences {
     my ($st_aref,@st) = @_;
-    
+    my ($sentences);
 
     # merge one sentence
     if (scalar @st == 1) {
-	return $$st_aref[$st[0]];
+	$sentences = $$st_aref[$st[0]];
 
     # merge two sentences
     } elsif (scalar @st == 2) {
-	return merge_hash(\%{$$st_aref[$st[0]]}, \%{$$st_aref[$st[1]]});
+	$sentences = $$st_aref[$st[0]]." ". $$st_aref[$st[1]];
 
     # merge three sentences
     } elsif (scalar @st == 3) {
-	return merge_hash(\%{$$st_aref[$st[0]]},
-			   merge_hash(\%{$$st_aref[$st[1]]}, \%{$$st_aref[$st[2]]}));
+	$sentences = $$st_aref[$st[0]]." ". $$st_aref[$st[1]]." ". $$st_aref[$st[2]]
 
     # merge four sentences
     } elsif (scalar @st == 4) {
-	return merge_hash(merge_hash(\%{$$st_aref[$st[0]]}, \%{$$st_aref[$st[1]]}),
-			  merge_hash(\%{$$st_aref[$st[2]]}, \%{$$st_aref[$st[3]]}));
+	$sentences = $$st_aref[$st[0]]." ". $$st_aref[$st[1]]." ". $$st_aref[$st[2]]." ". $$st_aref[$st[3]];
     }
 
 }
@@ -323,6 +394,63 @@ sub merge_hash {
 	
 	return \%newb;
 }
+
+
+
+sub score11 { 
+    local ($x1, $y1) = @_;
+
+    return $st_scores{"$x1,$y1"};
+}
+
+sub score12 { 
+    local ($x1, $y1, $y2) = @_;
+
+    return $st_scores{"$x1,$y1"}+$st_scores{"$x1,$y2"};
+}
+
+
+sub score21 {
+    local ($x1, $x2, $y1) = @_;
+    
+    return $st_scores{"$x1,$y1"}+$st_scores{"$x2, $y1"};
+}
+
+sub score22 {
+    local ($x1, $x2, $y1, $y2) = @_;
+    return $st_scores{"$x1,$y1"}+$st_scores{"$x1,$y2"}
+    + $st_scores{"$x2,$y1"}+$st_scores{"$x2,$y1"};
+}
+
+sub score31 {
+    local ($x1, $x2, $x3, $y1) = @_;
+    return $st_scores{"$x1,$y1"}+$st_scores{"$x2,$y1"}
+    + $st_scores{"$x3,$y1"};
+}
+
+sub score13 {
+    local ($x1, $y1, $y2, $y3) = @_;
+    return $st_scores{"$x1,$y1"}+$st_scores{"$x1,$y2"}
+    + $st_scores{"$x1,$y3"};
+}
+
+sub score41 {
+    local ($x1, $x2, $x3, $x4, $y1) = @_;
+    return $st_scores{"$x1,$y1"}+$st_scores{"$x2,$y1"}
+    + $st_scores{"$x3,$y1"} + $st_scores{"$x4,$y1"};
+}
+
+sub score14 {
+    local ($x1, $y1, $y2, $y3, $y4) = @_;
+    return $st_scores{"$x1,$y1"}+$st_scores{"$x1,$y2"}
+    + $st_scores{"$x1,$y3"}+$st_scores{"$x1,$y4"};
+}
+
+sub score14 { }
+sub score23 { }
+sub score32 { }
+sub score33 { }
+
 
 1;
 

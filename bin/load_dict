@@ -14,6 +14,7 @@ sub load_dict {
 	$translation =~ s/^\s+//;
 	$translation =~ s/\s+$//;
 	next if defined $$xstop_href{$source};
+	#$translation =~ s/\W/\\$&/g;
 	push  @{$dict{$source}}, $translation;
     }
     close D;

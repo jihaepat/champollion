@@ -8,11 +8,12 @@
 #
 
 use DB_File;
+use Fcntl qw(O_RDONLY O_RDWR O_CREAT);
 
 $eng_morph_txt = "$ENV{CTK}/lib/eng_morph.txt";
 $eng_morph = "$ENV{CTK}/lib/eng_morph";
 &make_eng_morph_db($eng_morph_txt, $eng_morph);
-tie %eng_morph, "DB_File", $eng_morph || die "$0: Cannot open dbmfile $eng_morph!\n";
+tie %eng_morph, "DB_File", $eng_morph,O_RDONLY,0444 || die "$0: Cannot open dbmfile $eng_morph!\n";
 
 while (<>) {
     chomp;
@@ -34,7 +35,7 @@ sub make_eng_morph_db {
     return if -e $eng_morph;
 
     print STDERR "Making English Morph DBM file ...\n";
-    tie %eng_morph, "DB_File", $eng_morph || die "Cannot open dbmfile $eng_morph";
+    tie %eng_morph, "DB_File", $eng_morph, O_CREAT|O_RDWR, 0664|| die "Cannot open dbmfile $eng_morph";
     open F,"<$eng_morph_txt" || die "English Morph file $eng_morph not found";
     while (<F>) {
         chomp;

@@ -42,8 +42,6 @@
 # newer version of the text file.
 ##############################################################################
 
-use DB_File;
-
 if ($0 =~ /\//) {
     $DICTPATH = $1 if ( $0 =~ /(.+)\/[^\/]+/ );
 } else {
@@ -246,22 +244,6 @@ sub pronode {
 }
 
 sub read_dict {
-    print STDERR "Reading frequency dictionary $dictfile ...\n";
-    if (-e "$dict_db") {
-	$textfiletime = -M $dictfile;
-	$dbmfiletime = -M "$dict_db";
-	if ($textfiletime > $dbmfiletime) {
-	    tie %freq, "DB_File", $dict_db || die "Cannot open dbmfile $dictfile";
-	    print STDERR "DBM file exists, use it ...\n";
-	    return;
-	} else {
-	    print STDERR "dbm file older than text file ...\n";
-	}
-	    
-    }
-    $freq{total} = 0;
-    print STDERR "Making DBM file ...\n";
-    tie %freq, "DB_File", $dict_db || die "Cannot open dbmfile $dictfile";
     open F,"<$dictfile" || die "Dictonary file $dictfile not found";
     while (<F>) {
 	chomp;
@@ -279,9 +261,5 @@ sub read_dict {
 	$freq{total} += $_[0];
     }
     close(F);
-
-    print STDERR "Making DBM file finished.\n";
-
-
 }
 

@@ -10,19 +10,50 @@ sub load_axis {
     print STDERR "Loading axis...";
     while (<A>){
 	chomp;
-	next if /^\s*$/;
-	next if defined $xstop{$_};
-	if ($_ eq "<EOS>") {
-	    push @$st_aref, {%new_st};
-	    undef %new_st;
-	    $stno++;
-	} elsif ($_ ne "<EOS>") {
-	    $$len_aref[$stno]++;
+
+	s/\s+/ /g;
+	split;
+
+	$snt = $_;
+	$snt =~ s/ //g;
+	$$len_aref[$stno] = length $snt;
+	push @$st_aref, $_;
+
+	foreach (@_) {
+	    #s/\W/\\$&/g;
+	    next if defined $xstop{$_};
 	    $$token_stat_href{$_}++;
 	    $$token_stat_href{TTAALL}++;
-	    $new_st{$_}++;
 	    $$tkn2snt_href{$_}{$stno} = 1;
 	}
+
+	$stno++;
+    }
+    close A;
+    print STDERR "done.\n";
+    print STDERR "Number of sentences: $stno\n";
+}
+
+sub load_axis_cn {
+    my ($axis_fn, $st_aref, $len_aref, $token_stat_href, $tkn2snt_href) = @_;
+    my $token, %new_st, %tkn2snt;
+    my $stno = 0;
+    
+    open A, "<$axis_fn" || die "$0: Can not open $axis_fn\n";
+    
+    print STDERR "Loading axis...";
+    while (<A>){
+	chomp;
+	s/\s+/ /g;
+	$$len_aref[$stno] = length $_;
+	s/\s//g;
+	@_ = split //,$_;
+	#print STDERR join '', @_, "\n";
+	foreach (@_) {
+	    $$tkn2snt_href{$_}{$stno} = 1;
+	}
+	push @$st_aref, $_;
+	$stno++;
     }
     close A;
     print STDERR "done.\n";
