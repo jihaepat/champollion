@@ -47,11 +47,11 @@ $nx = @xst;
 $ny = @yst;
 $xyratio = $nx/$ny;
 
-$WIN_PER_100 = 6;
+$WIN_PER_100 = 8;
 $MIN_WIN_SIZE = 20;
 $MAX_WIN_SIZE = 600;
 $w1_size = int($xyratio*$nx*$WIN_PER_100/100);
-$w2_size = abs($nx-$ny);
+$w2_size = int(abs($nx-$ny)*3/4);
 $window_size = min(max($MIN_WIN_SIZE,max($w1_size,$w2_size)),$MAX_WIN_SIZE);
 print STDERR "Window size: $window_size\n";
 
