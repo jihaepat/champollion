@@ -4,17 +4,18 @@
 #
 
 use Getopt::Std;
+#use DB_File;
 
 #
 # parse command line
 #
-getopts('hnacs:d:', \%opts) || usage();
+getopts('hnac:s:d:', \%opts) || usage();
 usage() if $opts{h};
 
 $fast = $opts{f};
 $disallow3 = $opts{n};
 $alignall = $opts{a};
-$notokenization = $opts{c};
+$xtoyc = $opts{c};
 $dict_fn = $opts{d};
 $Xstoplist = $opts{s};
 usage() if @ARGV != 3;
@@ -34,7 +35,6 @@ require "load_axis";
 require "len_match.pl";
 require "champollion_kernel";
 
-
 load_xstop($Xstoplist, \%xstop);
 load_dict($dict_fn, \%xstop,\%dict);
 load_axis($xfn, \@xst, \@lenx, \%xtoken_stat, \%xtkn2snt);
@@ -47,32 +47,59 @@ $nx = @xst;
 $ny = @yst;
 $xyratio = $nx/$ny;
 
-$WIN_PER_100 = 10;
+$WIN_PER_100 = 6;
 $MIN_WIN_SIZE = 20;
 $MAX_WIN_SIZE = 600;
-$window_size = int($xyratio*$nx*$WIN_PER_100/100);
-$window_size = $MIN_WIN_SIZE if $window_size < $MIN_WIN_SIZE;
-$window_size = $MAX_WIN_SIZE if $window_size > $MAX_WIN_SIZE;
+$w1_size = int($xyratio*$nx*$WIN_PER_100/100);
+$w2_size = abs($nx-$ny);
+$window_size = min(max($MIN_WIN_SIZE,max($w1_size,$w2_size)),$MAX_WIN_SIZE);
+print STDERR "Window size: $window_size\n";
 
-print STDERR "WIN size: $window_size ... \n";
+# If necessary, tie memory-intensive variables to on-disk database 
+# to reduce memory usage
+#if ($nx > 4000) { $usedbfile = 1 };
+#if ($usedbfile) {
+#    $pathxf = "/tmp/pathxf.$$";
+#    $pathyf = "/tmp/pathyf.$$";
+#    $scoref = "/tmp/score.$$";
+#    unlink $pathxf if -e $pathxf;
+#    unlink $pathyf if -e $pathyf;
+#    unlink $scoref if -e $scoref;
+#    tie %path_x, "DB_File", $pathxf || die "$0: Cannot open dbmfile $pathxf!\n";
+#    tie %path_y, "DB_File", $pathyf || die "$0: Cannot open dbmfile $pathyf!\n";
+#    tie %score, "DB_File", $scoref || die "$0: Cannot open dbmfile $scoref!\n";
+#}
+
 print STDERR "Aligning Sentences ... ";
-if ($notokenization) {
-    find_trans_pairs_cn();
-} else {
-    find_trans_pairs();
-}
+#if ($notokenization) {
+#    find_trans_pairs_cn();
+#} else {
+#    find_trans_pairs();
+#}
 
 
 align(\@lenx, \@leny, $nx, $ny);
 
-print STDERR "done.
-";
+print STDERR "done.\n";
+
 # If all sentences are translated
 if ($alignall) {
     merge_omission();
 }
 
 print_alignment($align_fn);
+
+#
+# clean up
+#
+if ($usedbfile) {
+    untie %path_x;
+    untie %path_y;
+    untie %score;
+    unlink $pathxf;
+    unlink $pathyf;
+    unlink $scoref;
+}
 exit;
 
 sub min {
@@ -256,11 +283,12 @@ sub upperbound {
 
 sub usage() {
     print STDERR << "EOF";
-usage: $0 [-hnsd] <X token file> <Y token file> <alignment file>
+usage: $0 [-hdscn] <X token file> <Y token file> <alignment file>
       
       -h       : this (help) message
       -d dictf : use dictf as the translation dictionary
       -s xstop : use words in file xstop as X stop words
+      -c n     : number of Y chars for each X char
       -n       : disallow 1-3, 3-1, 1-4, 4-1 alignments
               (faster, lower performance)
 

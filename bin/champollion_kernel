@@ -1,15 +1,15 @@
-my $MINS = 0;
+my $MINS = -10;
 
 my $penalty01 = 0.8;
-my $penalty21 = 0.95;
-my $penalty12 = 0.95;
+my $penalty21 = 0.96;
+my $penalty12 = 0.96;
 my $penalty22 = 0.85;
-my $penalty31 = 0.90;
-my $penalty13 = 0.90;
-my $penalty23 = 0; #0.85;
-my $penalty32 = 0; #0.85;
-my $penalty41 = 0.85;
-my $penalty14 = 0.85;
+my $penalty31 = 0.94;
+my $penalty13 = 0.94;
+my $penalty23 = 0.85;
+my $penalty32 = 0.85;
+my $penalty41 = 0.92; #0.85
+my $penalty14 = 0.92; #0.85
 my $penalty33 = 0; #0.80;
 
 # my $penalty01 = 1; # 0.8;
@@ -48,7 +48,6 @@ sub align {
     my ($im1, $im2, $im3, $im4, $jm1, $jm2, $jm3, $jm4);
 
     $xyratio = $nx/$ny;
-    #print STDERR "$xyratio Win: $window_size\n";
     for($j = 0; $j <= $ny; $j++) {
 	my $center = int($j * $xyratio);
 	$window_start = $center-$window_size>0?$center-$window_size:0;
@@ -150,18 +149,18 @@ sub align {
 		set_score($i,$j,$s8);
 		$path_x{"$i,$j"} = $i-3;
 		$path_y{"$i,$j"} = $j-1;
-	    } elsif ($smax == $s9) {             # 2-3
-		set_score($i,$j,$s9);
-		$path_x{"$i,$j"} = $i-2;
-		$path_y{"$i,$j"} = $j-3;
-	    } elsif ($smax == $s10){             # 3-2
-		set_score($i,$j,$s10);
-		$path_x{"$i,$j"} = $i-3;
-		$path_y{"$i,$j"} = $j-2;
-	    } elsif ($smax == $s11) {            # 3-3
-		set_score($i,$j,$s11);
-		$path_x{"$i,$j"} = $i-3;
-		$path_y{"$i,$j"} = $j-3;
+#	    } elsif ($smax == $s9) {             # 2-3
+#		set_score($i,$j,$s9);
+#		$path_x{"$i,$j"} = $i-2;
+#		$path_y{"$i,$j"} = $j-3;
+#	    } elsif ($smax == $s10){             # 3-2
+#		set_score($i,$j,$s10);
+#		$path_x{"$i,$j"} = $i-3;
+#		$path_y{"$i,$j"} = $j-2;
+#	    } elsif ($smax == $s11) {            # 3-3
+#		set_score($i,$j,$s11);
+#		$path_x{"$i,$j"} = $i-3;
+#		$path_y{"$i,$j"} = $j-3;
 	    } elsif ($smax == $s12) {             # 1-4
 		set_score($i,$j,$s12);
 		$path_x{"$i,$j"} = $i-1;
@@ -223,12 +222,14 @@ sub match_sentences {
     my $length_penalty = 1;
 
     ($x, $y) = split '-', $map;
+    #print STDERR "--- $map ---\n";
     @x = split ' ', $x;
     @y = split ' ', $y;
     
     $nx = @x; $ny = @y;
     
-    return 0.01 if $nx ==0 || $ny == 0;
+    #print STDERR "FS: -0.01\n";
+    return -0.1 if $nx == 0 || $ny == 0;
 
     # faster implementation
     if ($fast) {
@@ -259,32 +260,31 @@ sub match_sentences {
     # slower implementation
     } else {
 	$xsentences = merge_sentences(\@xst, @x);
-	unless ($notokenization) {
-	    $ysentences = merge_sentences(\@yst, @y);
-	}
+	$ysentences = merge_sentences(\@yst, @y);
 	$score = match_sentences_lex(\@x,\@y,$xsentences,$ysentences,\%xtoken_stat);
     }
 
-#    if ($length) {
+    foreach (@x) {
+	$xlen += $lenx[$_];
+    }
+    
+    foreach (@y) {
+	$ylen += $leny[$_];
+    }
 
-	foreach (@x) {
-	    $xlen += $lenx[$_];
-	}
-
-	foreach (@y) {
-	    $ylen += $leny[$_];
-	}
-
-	if (max($xlen,$ylen*1.577) > 80) {
-	    #$length_penalty = log(8+2*min($xlen*0.5265,$ylen)/max($xlen*0.5265,$ylen))/log(10);
-	    $length_penalty = log(6+4*min($xlen*0.634,$ylen)/max($xlen*0.634,$ylen))/log(10);
-	    # chinese chars per english words: 0.5265 if not segmented with 1.829 variance.
-            #
-	    #$length_penalty = match_sentences_len($xlen, $ylen,0.5265,1.829);
-	    # print STDERR "LEN: $xlen $ylen\t$score\t$length_penalty\n";
-	    # print STDERR "FS: ", $score*$length_penalty,"\n";
-	}
+    #if ($alignall) {
+    #if (1) {
+#	$score = 0.01 if $score == 0;
 #    }
+    
+    if (max($xlen,$ylen/$xtoyc) > 60) {
+	$length_penalty = log(6+4*min($xlen*$xtoyc,$ylen)/max($xlen*$xtoyc,$ylen))/log(10);
+	# chinese chars per english words: 0.5265 if not segmented with 1.829 variance.
+	#
+	#$length_penalty = match_sentences_len($xlen, $ylen,0.5265,1.829);
+	 #print STDERR "LEN: $xlen $ylen\t$score\t$length_penalty\n";
+	 #print STDERR "FS: ", $score*$length_penalty,"\n";
+    }
 
     if ($nx == 1 && $ny == 1) {
 	return $score * $length_penalty;
@@ -312,17 +312,18 @@ sub match_sentences {
 }
 
 
+
 sub match_sentences_lex {
-    my ($xsnts_index, $ysnts_index, $xsentences, $ysentences, $xtoken_stat_href) = @_;
+    my ($xsnts_index, $ysnts_index, $xsentences_ref, $ysentences_ref, $xtoken_stat_href) = @_;
     my (%xtokens,%ytokens);
     my $min_pairs = 1, $score = 0;
 
-    @_ = split ' ', $xsentences;
+    @_ = split ' ', $$xsentences_ref;
     foreach (@_) {
 	$xtokens{$_}++;
     }
 
-    @_ = split ' ', $ysentences;
+    @_ = split ' ', $$ysentences_ref;
     foreach (@_) {
 	$ytokens{$_}++;
     }
@@ -334,29 +335,49 @@ sub match_sentences_lex {
 
     # print STDERR "\n\n", join ' ',@$xsnts_index,"-", join ' ',@$ysnts_index,"\n";
 
-    foreach $xsnt (@$xsnts_index) {
-	foreach $ysnt (@$ysnts_index) {
-	    #print STDERR "----$xsnt $ysnt-----\n";
-	    foreach $idx (@{$transpairs{$xsnt,$ysnt}}) {
-		$pair = $dict_idx{$idx};
-		# print STDERR "$pair\n";
-		($xtoken, $xtoken_trans) = split ' ', $pair;
-		#print STDERR "$pair: $xtoken, $xtoken_trans\n";
-		if ($notokenization) {
-		    $min_pairs = min($xtokens{$xtoken},1);
-		} else {
+#    foreach $xsnt (@$xsnts_index) {
+#	foreach $ysnt (@$ysnts_index) {
+#	    #print STDERR "----$xsnt $ysnt-----\n";
+#	    foreach $idx (@{$transpairs{$xsnt,$ysnt}}) {
+#		$pair = $dict_idx{$idx};
+#		# print STDERR "$pair\n";
+#		($xtoken, $xtoken_trans) = split ' ', $pair;
+#		#print STDERR "$pair: $xtoken, $xtoken_trans\n";
+#		if ($notokenization) {
+#		    $min_pairs = min($xtokens{$xtoken},1);
+#		} else {
+#		    $min_pairs = min($xtokens{$xtoken},$ytokens{$xtoken_trans});
+#		}
+#		# print STDERR "$xtoken $xtokens{$xtoken} - MINP: $min_pairs\n";
+#		$score += log(($x_total_tokens/$$xtoken_stat_href{$xtoken}) * $min_pairs + 1);
+#		#$score *= ($x_total_tokens/$$xtoken_stat_href{$xtoken}) * $min_pairs;
+#		$xtokens{$xtoken} -= $min_pairs;
+#		unless ($notokenization) {
+#		    $ytokens{$xtoken_trans} -= $min_pairs;
+#		}
+#	    }
+#	}
+#    }
+
+
+    foreach $xtoken (keys %xtokens) {
+	if (defined $ytokens{$xtoken} && ! defined $xstop{$xtoken}) {
+	    $score += log(($x_total_tokens/$$xtoken_stat_href{$xtoken}) * min($xtokens{$xtoken},$ytokens{$xtoken})+1);
+	} else {
+	    foreach $xtoken_trans (@{$dict{$xtoken}}) {
+		if (defined $ytokens{$xtoken_trans}) {
 		    $min_pairs = min($xtokens{$xtoken},$ytokens{$xtoken_trans});
-		}
-		# print STDERR "$xtoken $xtokens{$xtoken} - MINP: $min_pairs\n";
-		$score += log(($x_total_tokens/$$xtoken_stat_href{$xtoken}) * $min_pairs + 1);
-		#$score *= ($x_total_tokens/$$xtoken_stat_href{$xtoken}) * $min_pairs;
-		$xtokens{$xtoken} -= $min_pairs;
-		unless ($notokenization) {
+		    next if $min_pairs == 0;
+		    #print STDERR "$xtoken $xtoken_trans $ytokens{$xtoken_trans}\n";
+		    $score += log(($x_total_tokens/$$xtoken_stat_href{$xtoken}) * $min_pairs + 1);
+		    $xtokens{$xtoken} -= $min_pairs;
 		    $ytokens{$xtoken_trans} -= $min_pairs;
+		    last;
 		}
 	    }
 	}
     }
+
     #print STDERR "Score: $score\n";
     return $score;
 }
@@ -371,31 +392,20 @@ sub merge_sentences {
 
     # merge two sentences
     } elsif (scalar @st == 2) {
-	$sentences = $$st_aref[$st[0]]." ". $$st_aref[$st[1]];
+	$sentences = "$$st_aref[$st[0]] $$st_aref[$st[1]]";
 
     # merge three sentences
     } elsif (scalar @st == 3) {
-	$sentences = $$st_aref[$st[0]]." ". $$st_aref[$st[1]]." ". $$st_aref[$st[2]]
+	$sentences = "$$st_aref[$st[0]] $$st_aref[$st[1]] $$st_aref[$st[2]]"
 
     # merge four sentences
     } elsif (scalar @st == 4) {
-	$sentences = $$st_aref[$st[0]]." ". $$st_aref[$st[1]]." ". $$st_aref[$st[2]]." ". $$st_aref[$st[3]];
+	$sentences = "$$st_aref[$st[0]] $$st_aref[$st[1]] $$st_aref[$st[2]] $$st_aref[$st[3]]";
     }
 
+    return \$sentences;
+
 }
-
-sub merge_hash {
-	my ($aref, $bref) = @_;
-	my %newb = %$bref;
-
-	foreach (keys %$aref) {
-	    $newb{$_} += $$aref{$_};
-	}
-	
-	return \%newb;
-}
-
-
 
 sub score11 { 
     local ($x1, $y1) = @_;

@@ -12,12 +12,13 @@ sub load_axis {
 	chomp;
 
 	s/\s+/ /g;
-	split;
+	push @$st_aref, $_;
+	@_ = split ' ',$_;
+	#undef %new_st;
 
 	$snt = $_;
 	$snt =~ s/ //g;
 	$$len_aref[$stno] = length $snt;
-	push @$st_aref, $_;
 
 	foreach (@_) {
 	    #s/\W/\\$&/g;
@@ -25,10 +26,11 @@ sub load_axis {
 	    $$token_stat_href{$_}++;
 	    $$token_stat_href{TTAALL}++;
 	    $$tkn2snt_href{$_}{$stno} = 1;
+	    #$new_st{$_}++;
 	}
-
 	$stno++;
     }
+
     close A;
     print STDERR "done.\n";
     print STDERR "Number of sentences: $stno\n";

@@ -37,7 +37,7 @@ exit 3
 fi
 # Align sentences
 echo "Aligning Sentences ... "
-$CTK/bin/champollion -d $CTK/lib/ecdict.gb.txt -s $CTK/lib/E.stoplist $en_axis $cn_axis $3
+$CTK/bin/champollion -d $CTK/lib/ecdict.gb.txt -s $CTK/lib/E.stoplist -c 0.634 $en_axis $cn_axis $3
 
 # Remove intermediate files
 rm $en_axis $cn_axis
