@@ -32,7 +32,7 @@ untie %eng_morph;
 sub make_eng_morph_db {
     my ($eng_morph_txt, $eng_morph) = @_;
 
-    return if -e $eng_morph;
+    return if -f $eng_morph;
 
     print STDERR "Making English Morph DBM file ...\n";
     tie %eng_morph, "DB_File", $eng_morph, O_CREAT|O_RDWR, 0664|| die "Cannot open dbmfile $eng_morph";
