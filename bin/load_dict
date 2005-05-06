@@ -1,21 +1,26 @@
 #!/usr/bin/perl
 
 sub load_dict {
-    local ($dict_fn, $xstop_href, $dict_href) = @_;
+    my ($dict_fn, $xstop_href, $dict_href) = @_;
 
     print STDERR "Reading seed translation lexicon...";
     open D, "<$dict_fn" || die "$0: Couldn't open $dict_fn!\n";
     while (<D>) {
 	chomp;
-	($source, $translation) = split(/ <> /, $_);
-	$source =~ s/A-Z/a-z/;
-	$source =~ s/^\s+//;
-	$source =~ s/\s+$//;
-	$translation =~ s/^\s+//;
-	$translation =~ s/\s+$//;
-	next if defined $$xstop_href{$source};
-	#$translation =~ s/\W/\\$&/g;
-	push  @{$dict{$source}}, $translation;
+	if (/^(.+) <> (.+)$/) {
+	    $source = $1;
+	    $translation = $2;
+	    $source =~ tr/[A-Z]/[a-z]/;
+	    $source =~ s/^\s+//;
+	    $source =~ s/\s+$//;
+	    $translation =~ s/^\s+//;
+	    $translation =~ s/\s+$//;
+	    next if defined $$xstop_href{$source};
+	    #$translation =~ s/\W/\\$&/g;
+	    push  @{$dict{$source}}, $translation;
+	} else {
+	    print STDERR "invalid dictionary entry:\n$_\n";
+	}
     }
     close D;
     print STDERR " done.\n";
