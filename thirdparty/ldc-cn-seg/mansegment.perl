@@ -42,6 +42,8 @@
 # newer version of the text file.
 ##############################################################################
 
+$wd = 2;
+
 if ($0 =~ /\//) {
     $DICTPATH = $1 if ( $0 =~ /(.+)\/[^\/]+/ );
 } else {
@@ -151,31 +153,25 @@ sub process {
 
 	    # if the first character doesn't have word phrase in the dict.
 	    # $freq{m,} is the length of the word
-	    if ($freq{"m,$firstword"} eq "") {
-		$freq{"m,$firstword"} = 2;
-	    }
-	    
-	    $i = $freq{"m,$firstword"};
-	    if ($i > $len - $position{$current}) {
-		$i = $len - $position{$current};
-	    }
-	    $i = $i +2;
-	    
-	    do {
-		$i = $i-2;
-		$word = substr($sentence, $position{$current}, $i);
-
-	    } while (($i >=2) && ($freq{$word} eq ""));
-	    
-	    if ($i < 2) {
-		$word = substr($sentence, $position{$current}, 2);
-		$freq{$word} = 1;
-		$i = 2;
-	    }
-	    
-	    if ($freq{$word}) {
-		&pronode();
-	    }
+           $i = $freq{"m,$firstword"};
+           if ($i > $len - $position{$current}) {
+               $i = $len - $position{$current};
+           }
+           if ($i < $wd) {
+             $i = $wd;
+           }
+                                                                              
+           while ($i>=$wd) {
+             $word = substr($sentence, $position{$current}, $i);
+             if ($i == $wd) {
+               $freq{$word} = 1; # single character always counts as a word
+             }
+             if ($freq{$word}) {
+               &pronode();
+             }
+                                                                              
+             $i -= $wd;
+	 }
 	}
     }
    
@@ -212,7 +208,7 @@ sub pronode {
 		    $top = $nextid;
 		    $needInsert = 0;
 		} else {
-		    $next{$father} = $next{$nextid};
+		    $next{$father} = $next{$index};
 		}
 	    }
 	    $index = -1;
@@ -226,6 +222,7 @@ sub pronode {
     
     # insert the new path into the list
     if ($needInsert == 1) {
+	$index = $top;
 	while (($index != -1) && ($value{$index} > $value{$nextid})) {
 	    $father = $index;
 	    $index = $next{$index};
