@@ -19,5 +19,7 @@ s/(\d)DOTTKN(\d)/$1\.$2/g;
 s/(\d)COLONTKN(\d)/$1\:$2/g;
 #s/(\d)COMATKN(\d)/$1\,$2/g;
 s/(\d)COMATKN(\d)/$1$2/g;
+s/([a-zA-Z])(\d)/$1 $2/g;
+s/(\d)([a-zA-Z])/$1 $2/g;
 
 print "$_\n";
