@@ -1,4 +1,4 @@
-                     Champollion Tool Kit V1.0
+                     Champollion Tool Kit V1.1
 
 
 
@@ -11,7 +11,7 @@ language pairs as possible.
 
 Built around the LDC champollion sentence aligner kernel, the tool kit
 provides essential components required for accurate sentence
-alignment, which includes sentence breakers, stemmers, pre-processing
+alignment, including sentence breakers, stemmers, pre-processing
 scripts, dictionaries (if possible), post-processing scripts etc.
 
 Currently, CTK includes tools to align Arabic English, and Chinese
@@ -107,8 +107,28 @@ Evaluation Corpus
 
 To facilitate the development of better sentence aligners, this
 package also includes the manually aligned English Chinese data as an
-evaluation corpus. The evaluation corpus is in 'eval' directory, files
-*.gold.align are the gold alignment.
+evaluation corpus. The evaluation corpus is in 'eval' directory.
+
+The data were selected from three sources: UN, Sinorama, and Hong Kong Hansards.
+
+The Chinese files are:
+
+198706005.c.txt         921008fc.txt            UN19990209_010.c.txt
+200110006.c.txt         930422fc.txt
+890621fc.txt            UN19930101_020.c.txt
+
+The English files are:
+
+198706005.e.txt         921008fe.txt            UN19990209_010.e.txt
+200110006.e.txt         930422fe.txt
+890621fe.txt            UN19930101_020.e.txt
+
+The gold alignment files are:
+
+198706005.gold.align            930422f.gold.align
+200110006.gold.align            UN19930101_020.gold.align
+890621f.gold.align              UN19990209_010.gold.align
+921008f.gold.align
 
 
 COPYRIGHT
@@ -123,6 +143,6 @@ Contributions, Questions, Bug report, etc.
 Please contact Xiaoyi Ma at xma@ldc.upenn.edu.
 
 
-Xiaoyi Ma 1/31/2004
+Xiaoyi Ma 8/23/2004
 Linguistic Data Consortium
 xma@ldc.upenn.edu
