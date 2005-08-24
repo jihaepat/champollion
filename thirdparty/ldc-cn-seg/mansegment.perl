@@ -31,6 +31,8 @@
 # Change of v1.1:
 # - simplified code
 # - regenerated database to be compatible with perl5
+# Bug fixed, May, 2005
+#
 #
 # Algorithm: Dynamic programming to find the path which has the highest 
 # multiple of word probability, the next word is selected from the longest
