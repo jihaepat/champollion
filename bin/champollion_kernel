@@ -1,16 +1,13 @@
 my $MINS = -10;
 
 my $penalty01 = 0.8;
-my $penalty21 = 0.96;
-my $penalty12 = 0.96;
+my $penalty21 = 0.95;
+my $penalty12 = 0.95;
 my $penalty22 = 0.85;
 my $penalty31 = 0.94;
 my $penalty13 = 0.94;
-my $penalty23 = 0.85;
-my $penalty32 = 0.85;
 my $penalty41 = 0.92; #0.85
 my $penalty14 = 0.92; #0.85
-my $penalty33 = 0; #0.80;
 
 
 sub set_score {
@@ -265,7 +262,7 @@ sub match_sentences {
     if (max($xlen,$ylen/$xtoyc) > 60) {
 	$length_penalty = log(6+4*min($xlen*$xtoyc,$ylen)/max($xlen*$xtoyc,$ylen))/log(10);
     }
-
+    
     if ($nx == 1 && $ny == 1) {
 	return $score * $length_penalty;
     } elsif ($nx == 1 && $ny == 2) {
