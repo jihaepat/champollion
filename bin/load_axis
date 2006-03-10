@@ -3,32 +3,42 @@
 sub load_axis {
     my ($axis_fn, $st_aref, $len_aref, $token_stat_href, $tkn2snt_href) = @_;
     my $token, %new_st, %tkn2snt;
-    my $stno = 0;
+    my $segid, $seg, $expected_segid;
     
     open A, "<$axis_fn" || die "$0: Can not open $axis_fn\n";
     
     print STDERR "Loading axis...";
+    $expected_segid = 1;
     while (<A>){
 	chomp;
+	
+	if (/<seg id=(\d+)>(.*)<\/seg>/) {
+	    $segid = $1; $seg = $2;
+	    if ($segid != $expected_segid) {
+		die "$0: expecting segment $expected_segid, see segment $segid instead!\n Check segmentation!\n";
+	    }
 
-	s/\s+/ /g;
-	push @$st_aref, $_;
-	@_ = split ' ',$_;
-	#undef %new_st;
+	    $seg =~ s/\s+/ /g;
+	    push @$st_aref, $seg;
+	    @tokens = split ' ',$seg;
+	    #undef %new_st;
 
-	$snt = $_;
-	$snt =~ s/ //g;
-	$$len_aref[$stno] = length $snt;
-
-	foreach (@_) {
-	    #s/\W/\\$&/g;
-	    next if defined $xstop{$_};
-	    $$token_stat_href{$_}++;
-	    $$token_stat_href{TTAALL}++;
-	    $$tkn2snt_href{$_}{$stno} = 1;
-	    #$new_st{$_}++;
+	    $snt = $seg;
+	    $snt =~ s/ //g;
+	    $$len_aref[$segid-1] = length $snt;
+	    
+	    foreach (@tokens) {
+		# the following line is needed when doing an exact match
+		# and the Y axis is not segmented
+		#s/\W/\\$&/g;
+		next if defined $xstop{$_};
+		$$token_stat_href{$_}++;
+		$$token_stat_href{TTAALL}++;
+		$$tkn2snt_href{$_}{$segid-1} = 1;
+		#$new_st{$_}++;
+	    }
+	    $expected_segid++;
 	}
-	$stno++;
     }
 
     close A;
