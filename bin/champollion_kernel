@@ -6,8 +6,8 @@ my $penalty12 = 0.95;
 my $penalty22 = 0.85;
 my $penalty31 = 0.94;
 my $penalty13 = 0.94;
-my $penalty41 = 0.92; #0.85
-my $penalty14 = 0.92; #0.85
+my $penalty41 = 0.92;
+my $penalty14 = 0.92;
 
 
 sub set_score {
