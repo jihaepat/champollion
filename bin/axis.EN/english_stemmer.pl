@@ -16,16 +16,20 @@ $eng_morph = "$ENV{CTK}/lib/eng_morph";
 tie %eng_morph, "DB_File", $eng_morph,O_RDONLY,0444 || die "$0: Cannot open dbmfile $eng_morph!\n";
 
 while (<>) {
-    chomp;
-    @_ = split;
-    foreach (@_) {
-	if (defined $eng_morph{$_}) {
-	    print "$eng_morph{$_} ";
-	} else {
-	    print "$_ ";
+    if (/<seg id=(\d+)>(.*)<\/seg>/) {
+	$segid = $1; $seg = $2;
+
+	$stemmed_seg = "";
+	@_ = split ' ', $seg;
+	foreach (@_) {
+	    if (defined $eng_morph{$_}) {
+		$stemmed_seg .= "$eng_morph{$_} ";
+	    } else {
+		$stemmed_seg .= "$_ ";
+	    }
 	}
+	print "<seg id=$segid>$stemmed_seg</seg>\n";
     }
-    print "\n";
 }
 untie %eng_morph;
 
