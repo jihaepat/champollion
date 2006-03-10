@@ -1,6 +1,12 @@
-#!/usr/bin/perl -p
+#!/usr/bin/perl -n
 
-s/\d+(\,\d+)*(\.\d+)?/ $& /g;
-s/[a-zA-Z]+/sprintf " %s ", lc $& /eg;
-s/[\x21-\x2B\x2D\x2F]|[\x3A-\x40]|[\x5B-\x60]|[\x7B-\x7E]/ $& /g;
+if (/<seg id=(\d+)>(.*)<\/seg>/) {
+    $segid = $1; $seg = $2;
+    
+    $seg =~ s/\d+(\,\d+)*(\.\d+)?/ $& /g;
+    $seg =~ s/[a-zA-Z]+/sprintf " %s ", lc $& /eg;
+    $seg =~ s/[\x21-\x2B\x2D\x2F]|[\x3A-\x40]|[\x5B-\x60]|[\x7B-\x7E]/ $& /g;
 
+    print "<seg id=$segid>$seg</seg>\n";
+
+}
