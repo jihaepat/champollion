@@ -41,4 +41,4 @@ echo "Aligning Sentences ... "
 $CTK/bin/champollion -d $CTK/lib/ecdict.gb.txt -s $CTK/lib/E.stoplist -c 0.634 $en_axis $cn_axis $3
 
 # Remove temporary files
-#rm $en_axis $cn_axis
+rm $en_axis $cn_axis
