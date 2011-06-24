@@ -29,6 +29,17 @@ while (<>) {
 	    }
 	}
 	print "<seg id=$segid>$stemmed_seg</seg>\n";
+    } else {
+	$stemmed_seg = "";
+	@_ = split ' ', $_;
+	foreach (@_) {
+	    if (defined $eng_morph{$_}) {
+		$stemmed_seg .= "$eng_morph{$_} ";
+	    } else {
+		$stemmed_seg .= "$_ ";
+	    }
+	}
+	print "$stemmed_seg\n";
     }
 }
 untie %eng_morph;

@@ -21,7 +21,7 @@ sub load_dict {
     open D, "<$dict_fn" || die "$0: Couldn't open $dict_fn!\n";
     while (<D>) {
 	chomp;
-	if (/^\s*(.+)\s*<>\s*(.+)\s*$/) {
+	if (/^\s*(.+?)\s*<>\s*(.+?)\s*$/) {
 	    $source = $1;
 	    $translation = $2;
 
@@ -34,7 +34,7 @@ sub load_dict {
 	    next if defined $$xstop_href{$source};
 
 	    #$translation =~ s/\W/\\$&/g;
-	    push  @{$dict{$source}}, $translation;
+	    push  @{$dict{"$source"}}, $translation;
 	} else {
 	    print STDERR "invalid dictionary entry:\n$_\n";
 	}
@@ -42,6 +42,7 @@ sub load_dict {
     close D;
     print STDERR " done.\n";
     print STDERR "Number of entries: ", scalar keys %dict, "\n";
+
 }
 
 1;

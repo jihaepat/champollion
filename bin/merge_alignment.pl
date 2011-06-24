@@ -5,9 +5,13 @@
 #          merge_alignment.pl merge two sides together and 
 #          print an easy-to-read output
 # Usage: merge_alignment.pl [hod] X_sentence_file Y_sentence_file aligment_result
-#        X_sentence_file: files contains all X sentences, one sentence per line
-#        X_sentence_file: files contains all Y sentences, one sentence per line
-#        alignment_result: alignment file, one alignment align
+#        X_sentence_file: files contains all X sentences, indicated by 
+#           <seg id=###> </seg>
+#        the seg ids should be sequential numbers, starting from one.
+#        Y_sentence_file: files contains all Y sentences, indicated by
+#           <seg id=###> </seg>
+#        the seg ids should be sequential numbers, starting from one.
+#        alignment_result: alignment file, one alignment per line
 
 use Getopt::Std;
 
@@ -18,18 +22,20 @@ $printomission = $opts{o};
 $debug = $opts{d};
 usage() if @ARGV != 3;
 
+($efn, $cfn, $align) = @ARGV;
 
-open E, "cat -n $ARGV[0]|" || die "$0: can not open $ARGV[0]\n";
-open C, "cat -n $ARGV[1]|" || die "$0: can not open $ARGV[1]\n";
-open A, "<$ARGV[2]" || die "$0: can not open $ARGV[2]\n";
 
-$docid = `basename $ARGV[2]`;
+open E, "<$efn" or die "$0: can not open $efn\n";
+open C, "<$cfn" or die "$0: can not open $cfn\n";
+open A, "<$align" or die "$0: can not open $align\n";
+
+$docid = `basename $cfn`;
 $docid =~ s/\..+//;
 chomp $docid;
 
 while(<E>) {
     chomp;
-    if (/^\s*(\d+)\s+(.+)$/) {
+    if (/<seg id=(\d+)>(.*)<\/seg>/) {
 	$ln = $1;
 	$es = $2;
 	$eline{$ln} = $es;
@@ -38,7 +44,7 @@ while(<E>) {
 
 while(<C>) {
     chomp;
-    if (/^\s*(\d+)\s+(.+)$/) {
+    if (/<seg id=(\d+)>(.*)<\/seg>/) {
 	$ln = $1;
         $cs = $2;
 	$cline{$ln} = $cs;
