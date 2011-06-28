@@ -14,13 +14,12 @@ provides essential components required for accurate sentence
 alignment, including sentence breakers, stemmers, pre-processing
 scripts, dictionaries (if possible), post-processing scripts etc.
 
-Currently, CTK includes tools to align Arabic English, and Chinese
-English parallel text. It can be easily expanded to other languages,
-such as Hindi, Tagalog, Cebuano, and so on.
+Currently, CTK includes tools to align English text with Arabic, Chinese,
+ and Hindi translations. It can be easily expanded to other language pairs.
 
 CTK welcomes contributions from other researchers.
 
-CTK is written in perl which make it platform independent.
+CTK is written in perl.
 
 Installation
 ------------
@@ -38,7 +37,7 @@ case minimum diagnosis will be given.
 
 Please note, the first time you run champollion (or test_installation
 which runs champollion internally), the program needs to build certain
-databases, which can take up to 10 minutes.
+databases, which can take up to five minutes.
 
 Input and Output
 ----------------
@@ -102,6 +101,10 @@ your_CTK_path/bin/champollion.EC_utf8 <english sentence file> <chinese sentence 
 Command line to run English Arabic sentence aligner:
 
 your_CTK_path/bin/champollion.EA <english sentence file> <arabic sentence file> <alignment file>
+
+Command line to run English Hindi sentence aligner:
+
+your_CTK_path/bin/champollion.EH <english sentence file> <hindi sentence file> <alignment file>
 
 In addition, there is champollion.generic which can align unknown
 language pairs. To run it:
