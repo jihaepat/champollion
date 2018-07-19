@@ -71,7 +71,7 @@ $#ARGV = -1;
 
 while (<>) {
     chomp;
-    split(//,$_);
+    @_ = split(//,$_);
     $newline = "";
     $ch = 0;
     while (@_) {
@@ -247,17 +247,17 @@ sub read_dict {
     while (<F>) {
 	chomp;
 	s/^ *//;
-	split;
-	$freq{$_[1]}  = $_[0];
-	$header = substr($_[1],0,2);
+	@_ = split;
+	$freq{@_[1]}  = @_[0];
+	$header = substr(@_[1],0,2);
 	if ($freq{"m,$header"}) {
-	    if ($freq{"m,$header"} < length($_[1])) {
-		$freq{"m,$header"} = length($_[1]);
+	    if ($freq{"m,$header"} < length(@_[1])) {
+		$freq{"m,$header"} = length(@_[1]);
 	    }
 	} else {
-	    $freq{"m,$header"} = length($_[1]);
+	    $freq{"m,$header"} = length(@_[1]);
 	}
-	$freq{total} += $_[0];
+	$freq{total} += @_[0];
     }
     close(F);
 }
